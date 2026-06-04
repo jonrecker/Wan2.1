@@ -543,11 +543,10 @@ class WanModel(ModelMixin, ConfigMixin):
         ])
 
         # time embeddings
-        with amp.autocast(dtype=torch.float32):
-            e = self.time_embedding(
-                sinusoidal_embedding_1d(self.freq_dim, t).float())
-            e0 = self.time_projection(e).unflatten(1, (6, self.dim))
-            assert e.dtype == torch.float32 and e0.dtype == torch.float32
+        e = self.time_embedding(
+            sinusoidal_embedding_1d(self.freq_dim, t).float()).to(torch.float32)
+        e0 = self.time_projection(e).unflatten(1, (6, self.dim)).to(torch.float32)
+        assert e.dtype == torch.float32 and e0.dtype == torch.float32
 
         # context
         context_lens = None

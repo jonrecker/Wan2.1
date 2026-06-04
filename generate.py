@@ -275,9 +275,9 @@ def generate(args):
         logging.info(
             f"offload_model is not specified, set to {args.offload_model}.")
     if world_size > 1:
-        torch.cuda.set_device(local_rank)
+        torch.xpu.set_device(local_rank)
         dist.init_process_group(
-            backend="nccl",
+            backend="ccl",
             init_method="env://",
             rank=rank,
             world_size=world_size)

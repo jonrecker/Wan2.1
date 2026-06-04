@@ -1,6 +1,5 @@
 # Copyright 2024-2025 The Alibaba Wan Team Authors. All rights reserved.
 import torch
-import torch.cuda.amp as amp
 import torch.nn as nn
 from diffusers.configuration_utils import register_to_config
 
@@ -207,7 +206,7 @@ class VaceWanModel(WanModel):
         ])
 
         # time embeddings
-        with amp.autocast(dtype=torch.float32):
+        with torch.amp.autocast(device_type="xpu", dtype=torch.float32):
             e = self.time_embedding(
                 sinusoidal_embedding_1d(self.freq_dim, t).float())
             e0 = self.time_projection(e).unflatten(1, (6, self.dim))

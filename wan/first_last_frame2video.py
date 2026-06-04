@@ -11,7 +11,6 @@ from functools import partial
 
 import numpy as np
 import torch
-import torch.cuda.amp as amp
 import torch.distributed as dist
 import torchvision.transforms.functional as TF
 from tqdm import tqdm
@@ -66,7 +65,7 @@ class WanFLF2V:
             init_on_cpu (`bool`, *optional*, defaults to True):
                 Enable initializing Transformer Model on CPU. Only works without FSDP or USP.
         """
-        self.device = torch.device(f"cuda:{device_id}")
+        self.device = torch.device(f"xpu:{device_id}")
         self.config = config
         self.rank = rank
         self.use_usp = use_usp
@@ -282,7 +281,7 @@ class WanFLF2V:
         no_sync = getattr(self.model, 'no_sync', noop_no_sync)
 
         # evaluation mode
-        with amp.autocast(dtype=self.param_dtype), torch.no_grad(), no_sync():
+        with torch.amp.autocast(device_type="xpu", dtype=self.param_dtype), torch.no_grad(), no_sync():
 
             if sample_solver == 'unipc':
                 sample_scheduler = FlowUniPCMultistepScheduler(
@@ -323,7 +322,7 @@ class WanFLF2V:
             }
 
             if offload_model:
-                torch.cuda.empty_cache()
+                torch.xpu.empty_cache()
 
             self.model.to(self.device)
             for _, t in enumerate(tqdm(timesteps)):
@@ -336,12 +335,12 @@ class WanFLF2V:
                     latent_model_input, t=timestep, **arg_c)[0].to(
                         torch.device('cpu') if offload_model else self.device)
                 if offload_model:
-                    torch.cuda.empty_cache()
+                    torch.xpu.empty_cache()
                 noise_pred_uncond = self.model(
                     latent_model_input, t=timestep, **arg_null)[0].to(
                         torch.device('cpu') if offload_model else self.device)
                 if offload_model:
-                    torch.cuda.empty_cache()
+                    torch.xpu.empty_cache()
                 noise_pred = noise_pred_uncond + guide_scale * (
                     noise_pred_cond - noise_pred_uncond)
 
@@ -361,7 +360,7 @@ class WanFLF2V:
 
             if offload_model:
                 self.model.cpu()
-                torch.cuda.empty_cache()
+                torch.xpu.empty_cache()
 
             if self.rank == 0:
                 videos = self.vae.decode(x0)
@@ -370,7 +369,7 @@ class WanFLF2V:
         del sample_scheduler
         if offload_model:
             gc.collect()
-            torch.cuda.synchronize()
+            torch.xpu.synchronize()
         if dist.is_initialized():
             dist.barrier()
 
