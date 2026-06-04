@@ -11,6 +11,9 @@ easydict
 ftfy
 dashscope
 imageio-ffmpeg
-flash_attn
+
+# install flash_attn from wheel to avoid building from source (slow)
+https://download.pytorch.org/whl/cu130/flash_attn_3-3.0.0-cp39-abi3-manylinux_2_28_x86_64.whl
+
 gradio>=5.0.0
 numpy>=1.23.5,<2
