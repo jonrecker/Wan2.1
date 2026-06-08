@@ -8,6 +8,8 @@ import imageio
 import torch
 import torchvision
 
+from torchcodec.encoders import Encoder
+
 __all__ = ['cache_video', 'cache_image', 'str2bool']
 
 
@@ -27,7 +29,10 @@ def cache_video(tensor,
                 nrow=8,
                 normalize=True,
                 value_range=(-1, 1),
-                retry=5):
+                retry=5,
+                encoder_backend='imageio'):
+    print("Calling cache_video with encoder_backend =", encoder_backend)
+
     # cache file
     cache_file = osp.join('/tmp', rand_name(
         suffix=suffix)) if save_file is None else save_file
@@ -43,15 +48,34 @@ def cache_video(tensor,
                     u, nrow=nrow, normalize=normalize, value_range=value_range)
                 for u in tensor.unbind(2)
             ],
-                                 dim=1).permute(1, 2, 3, 0)
+                                 dim=1)
             tensor = (tensor * 255).type(torch.uint8).cpu()
 
-            # write video
-            writer = imageio.get_writer(
-                cache_file, fps=fps, codec='libx264', quality=8)
-            for frame in tensor.numpy():
-                writer.append_data(frame)
-            writer.close()
+            if encoder_backend == 'imageio':
+                # THWC layout required by imageio
+                tensor = tensor.permute(1, 2, 3, 0)
+                writer = imageio.get_writer(
+                    cache_file, fps=fps, codec='libx264', quality=8)
+                for frame in tensor.numpy():
+                    writer.append_data(frame)
+                writer.close()
+            elif encoder_backend == 'torchcodec':
+                # TCHW layout required by torchcodec
+                tensor = tensor.permute(1, 0, 2, 3)
+                # approximate the same quality as the imageio implementation, which
+                #   uses a quality scale of [1, 10] --> maps to x264 crf range [1, 51]
+                # see: https://github.com/imageio/imageio-ffmpeg/blob/main/imageio_ffmpeg/_io.py
+                quality = 8
+                crf = (1.0 - quality / 10.0) * 51
+                encoder = Encoder()
+                video_stream = encoder.add_video(
+                    height=tensor.shape[2],
+                    width=tensor.shape[3],
+                    frame_rate=fps, crf=crf)
+                with encoder.open_file(cache_file):
+                    video_stream.add_frames(tensor)
+            else:
+                raise ValueError("Unsupported encoder_backend.")
             return cache_file
         except Exception as e:
             error = e

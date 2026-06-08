@@ -14,3 +14,4 @@ imageio-ffmpeg
 gradio>=5.0.0
 numpy>=1.23.5,<2
 einops
+https://files.pythonhosted.org/packages/7d/47/a09aeb9212726a019b97c941b8325e84e753d124f93ad6c792e80226cd3e/torchcodec_xpu-0.13.0-cp312-cp312-manylinux_2_24_x86_64.whl

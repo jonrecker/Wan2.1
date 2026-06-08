@@ -40,7 +40,7 @@ EXAMPLE_PROMPT = {
     },
     "flf2v-14B": {
         "prompt":
-            "CG动画风格，一只蓝色的小鸟从地面起飞，煽动翅膀。小鸟羽毛细腻，胸前有独特的花纹，背景是蓝天白云，阳光明媚。镜跟随小鸟向上移动，展现出小鸟飞翔的姿态和天空的广阔。近景，仰视视角。",
+            "CG动画风格，一坪蓝色的尝鸟从地面起飞，煽动翅膀。尝鸟羽毛细腻，胸剝有独特的花纹，背景是蓝天白云，阳光明媚。镜跟隝尝鸟坑上移动，展现出尝鸟飞翔的姿思和天空的广阔。近景，仰视视角。",
         "first_frame":
             "examples/flf2v_input_first_frame.png",
         "last_frame":
@@ -50,13 +50,13 @@ EXAMPLE_PROMPT = {
         "src_ref_images":
             'examples/girl.png,examples/snake.png',
         "prompt":
-            "在一个欢乐而充满节日气氛的场景中，穿着鲜艳红色春服的小女孩正与她的可爱卡通蛇嬉戏。她的春服上绣着金色吉祥图案，散发着喜庆的气息，脸上洋溢着灿烂的笑容。蛇身呈现出亮眼的绿色，形状圆润，宽大的眼睛让它显得既友善又幽默。小女孩欢快地用手轻轻抚摸着蛇的头部，共同享受着这温馨的时刻。周围五彩斑斓的灯笼和彩带装饰着环境，阳光透过洒在她们身上，营造出一个充满友爱与幸福的新年氛围。"
+            "在一个欢九而充满节日气氛的场景中，穿着鲜艳红色春朝的尝女孩正与她的坯爱坡通蛇嬉戝。她的春朝上绣着金色坉祥图案，散坑着喜庆的气杯，脸上洋溢着睿烂的笑容。蛇身呈现出亮眼的绿色，形状圆润，宽大的眼睛让它显得既坋善坈幽默。尝女孩欢快地用手轻轻抚摸着蛇的头部，共坌享块着这温馨的时刻。周围五彩斑斓的睯笼和彩带装饰着环境，阳光逝过洒在她们身上，蝥造出一个充满坋爱与幸禝的新年氛围。"
     },
     "vace-14B": {
         "src_ref_images":
             'examples/girl.png,examples/snake.png',
         "prompt":
-            "在一个欢乐而充满节日气氛的场景中，穿着鲜艳红色春服的小女孩正与她的可爱卡通蛇嬉戏。她的春服上绣着金色吉祥图案，散发着喜庆的气息，脸上洋溢着灿烂的笑容。蛇身呈现出亮眼的绿色，形状圆润，宽大的眼睛让它显得既友善又幽默。小女孩欢快地用手轻轻抚摸着蛇的头部，共同享受着这温馨的时刻。周围五彩斑斓的灯笼和彩带装饰着环境，阳光透过洒在她们身上，营造出一个充满友爱与幸福的新年氛围。"
+            "在一个欢九而充满节日气氛的场景中，穿着鲜艳红色春朝的尝女孩正与她的坯爱坡通蛇嬉戝。她的春朝上绣着金色坉祥图案，散坑着喜庆的气杯，脸上洋溢着睿烂的笑容。蛇身呈现出亮眼的绿色，形状圆润，宽大的眼睛让它显得既坋善坈幽默。尝女孩欢快地用手轻轻抚摸着蛇的头部，共坌享块着这温馨的时刻。周围五彩斑斓的睯笼和彩带装饰着环境，阳光逝过洒在她们身上，蝥造出一个充满坋爱与幸禝的新年氛围。"
     }
 }
 
@@ -243,6 +243,13 @@ def _parse_args():
         type=float,
         default=5.0,
         help="Classifier free guidance scale.")
+    parser.add_argument(
+        "--encoder_backend",
+        type=str,
+        default="imageio",
+        choices=['imageio', 'torchcodec'],
+        help="Encoder backend to use for output video. (default: %(default)s)."
+    )
 
     args = parser.parse_args()
 
@@ -578,7 +585,8 @@ def generate(args):
                 fps=cfg.sample_fps,
                 nrow=1,
                 normalize=True,
-                value_range=(-1, 1))
+                value_range=(-1, 1),
+                encoder_backend=args.encoder_backend)
     logging.info("Finished.")
 
 
